@@ -1,8 +1,6 @@
-# three-jsm
-Simple project example using the ES6 modules of three.js.
+# Poku Click (WIP)
+A super small clicker game where you count the liters of rainbow puke the little sprout spews.
 
 ---
 
-After downloading the repository, execute `npm install` once in the root directory to install all dependencies.
-
-You can then start a local server by using `npm start` and open `http://localhost:3000/app/` for testing.
+Made in 3 days (TBA) for PokuriMio's bi-weekly art challenge.
