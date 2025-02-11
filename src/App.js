@@ -19,7 +19,7 @@ let assetManager;
 let canvas;
 let lastFrameTime = Date.now() / 1000;
 
-const baseUrl = "../PokuClick/assets/sprout/";
+const baseUrl = "/PokuClick/assets/sprout/";
 const skeletonFile = "Sprout.json";
 let atlasFile = skeletonFile
 	.replace("-pro", "")
