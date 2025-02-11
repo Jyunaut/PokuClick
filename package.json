@@ -1,0 +1,30 @@
+{
+  "name": "jsm",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "rollup -c \"rollup_config.js\"",
+    "start": "serve"
+  },
+  "author": "Mugen87",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@esotericsoftware/spine-canvas": "^4.2.72",
+    "@esotericsoftware/spine-canvaskit": "^4.2.72",
+    "@esotericsoftware/spine-core": "^4.2.72",
+    "@esotericsoftware/spine-phaser": "^4.2.72",
+    "@esotericsoftware/spine-pixi-v7": "^4.2.72",
+    "@esotericsoftware/spine-pixi-v8": "^4.2.72",
+    "@esotericsoftware/spine-player": "^4.2.72",
+    "@esotericsoftware/spine-threejs": "^4.2.72",
+    "@esotericsoftware/spine-webgl": "^4.2.72",
+    "three": "0.162.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "15.2.3",
+    "@rollup/plugin-terser": "0.4.4",
+    "rollup": "4.9.6",
+    "serve": "14.2.1"
+  }
+}
