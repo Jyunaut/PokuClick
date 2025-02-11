@@ -4,7 +4,8 @@ import {
 	MeshBasicMaterial,
 	PerspectiveCamera,
 	Scene,
-	WebGLRenderer
+	WebGLRenderer,
+	Raycaster
 } from 'three';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -13,6 +14,7 @@ import * as spine from '@esotericsoftware/spine-threejs';
 
 let scene, camera, renderer;
 let geometry, material, mesh, skeletonMesh;
+let animationStateData;
 let atlas;
 let atlasLoader;
 let assetManager;
@@ -20,12 +22,14 @@ let canvas;
 let lastFrameTime = Date.now() / 1000;
 
 const baseUrl = "/PokuClick/assets/sprout/";
+// const baseUrl = "/assets/sprout/";
 const skeletonFile = "Sprout.json";
 let atlasFile = skeletonFile
 	.replace("-pro", "")
 	.replace("-ess", "")
 	.replace(".json", ".atlas");
-let animation = "idle";
+let anim_idle = "sitting";
+let anim_pressed = "sitting_press";
 
 class App {
 	init() {
@@ -50,21 +54,41 @@ class App {
 		assetManager.loadText(skeletonFile);
 		assetManager.loadTextureAtlas(atlasFile);
 
+		canvas.addEventListener('click', onCanvasClick, false); // Add event listener for canvas click
+
 		requestAnimationFrame(load);
+	}
+}
+
+// Function to handle canvas click event
+function onCanvasClick(event) {
+	// Calculate mouse position in normalized device coordinates (-1 to +1) for both components
+	const mouse = {
+		x: (event.clientX / window.innerWidth) * 2 - 1,
+		y: -(event.clientY / window.innerHeight) * 2 + 1
+	};
+
+	// Create a raycaster and set its position from the camera and mouse coordinates
+	const raycaster = new Raycaster();
+	raycaster.setFromCamera(mouse, camera);
+
+	// Calculate objects intersecting the picking ray
+	const intersects = raycaster.intersectObject(skeletonMesh, true);
+
+	if (intersects.length > 0) {
+		// If the skeleton mesh is clicked, change the animation with mixing
+		skeletonMesh.state.setAnimation(0, anim_pressed, false).listener = {
+			complete: function (trackEntry) {
+				// When the pressed animation is complete, switch back to the idle animation with mixing
+				let entry = skeletonMesh.state.setAnimation(0, anim_idle, true);
+				entry.mixDuration = 0.2;
+			}
+		};
 	}
 }
 
 function load() {
 	if (assetManager.isLoadingComplete()) {
-		// Add a box to the scene to which we attach the skeleton mesh
-		geometry = new BoxGeometry(200, 200, 200);
-		material = new MeshBasicMaterial({
-			color: 0x00ff00,
-			wireframe: true,
-		});
-		mesh = new Mesh(geometry, material);
-		scene.add(mesh);
-
 		// Load the texture atlas using name.atlas and name.png from the AssetManager.
 		// The function passed to TextureAtlas is used to resolve relative paths.
 		atlas = assetManager.require(atlasFile);
@@ -79,8 +103,8 @@ function load() {
 
 		// Create a SkeletonMesh from the data and attach it to the scene
 		skeletonMesh = new spine.SkeletonMesh(skeletonData);
-		skeletonMesh.state.setAnimation(0, animation, true);
-		mesh.add(skeletonMesh);
+		skeletonMesh.state.setAnimation(0, anim_idle, true);
+		scene.add(skeletonMesh);
 
 		requestAnimationFrame(render);
 	} else {
