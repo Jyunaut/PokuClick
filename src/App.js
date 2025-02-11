@@ -14,15 +14,15 @@ import * as spine from '@esotericsoftware/spine-threejs';
 
 let scene, camera, renderer;
 let geometry, material, mesh, skeletonMesh;
-let animationStateData;
 let atlas;
 let atlasLoader;
 let assetManager;
 let canvas;
 let lastFrameTime = Date.now() / 1000;
 
-const baseUrl = "/PokuClick/assets/sprout/";
-// const baseUrl = "/assets/sprout/";
+const baseUrl = process.env.STATUS === 'production'
+	? process.env.APP_BASE_URL_PRODUCTION
+	: process.env.APP_BASE_URL_DEVELOPMENT;
 const skeletonFile = "Sprout.json";
 let atlasFile = skeletonFile
 	.replace("-pro", "")
@@ -54,10 +54,50 @@ class App {
 		assetManager.loadText(skeletonFile);
 		assetManager.loadTextureAtlas(atlasFile);
 
-		canvas.addEventListener('click', onCanvasClick, false); // Add event listener for canvas click
+		canvas.addEventListener('click', onCanvasClick, false);
 
 		requestAnimationFrame(load);
 	}
+}
+
+function load() {
+	if (assetManager.isLoadingComplete()) {
+		// Load the texture atlas using name.atlas and name.png from the AssetManager.
+		// The function passed to TextureAtlas is used to resolve relative paths.
+		atlas = assetManager.require(atlasFile);
+		
+		// Create an AtlasAttachmentLoader that resolves region, mesh, boundingbox and path attachments
+		atlasLoader = new spine.AtlasAttachmentLoader(atlas);
+		
+		// Create a SkeletonJson instance for parsing the .json file
+		let skeletonJson = new spine.SkeletonJson(atlasLoader);
+		skeletonJson.scale = 0.4;
+		let skeletonData = skeletonJson.readSkeletonData(assetManager.require(skeletonFile));
+		
+		// Create a SkeletonMesh from the data and attach it to the scene
+		skeletonMesh = new spine.SkeletonMesh(skeletonData);
+		skeletonMesh.state.setAnimation(0, anim_idle, true);
+		scene.add(skeletonMesh);
+		
+		requestAnimationFrame(render);
+	} else {
+		requestAnimationFrame(load);
+	}
+}
+
+function render() {
+	// Calculate delta time for animation purposes
+	let now = Date.now() / 1000;
+	let delta = now - lastFrameTime;
+	lastFrameTime = now;
+	
+	// Update the animation
+	skeletonMesh.update(delta);
+	
+	// Render the scene
+	renderer.render(scene, camera);
+	
+	requestAnimationFrame(render);
 }
 
 // Function to handle canvas click event
@@ -87,51 +127,11 @@ function onCanvasClick(event) {
 	}
 }
 
-function load() {
-	if (assetManager.isLoadingComplete()) {
-		// Load the texture atlas using name.atlas and name.png from the AssetManager.
-		// The function passed to TextureAtlas is used to resolve relative paths.
-		atlas = assetManager.require(atlasFile);
-
-		// Create an AtlasAttachmentLoader that resolves region, mesh, boundingbox and path attachments
-		atlasLoader = new spine.AtlasAttachmentLoader(atlas);
-
-		// Create a SkeletonJson instance for parsing the .json file
-		let skeletonJson = new spine.SkeletonJson(atlasLoader);
-		skeletonJson.scale = 0.4;
-		let skeletonData = skeletonJson.readSkeletonData(assetManager.require(skeletonFile));
-
-		// Create a SkeletonMesh from the data and attach it to the scene
-		skeletonMesh = new spine.SkeletonMesh(skeletonData);
-		skeletonMesh.state.setAnimation(0, anim_idle, true);
-		scene.add(skeletonMesh);
-
-		requestAnimationFrame(render);
-	} else {
-		requestAnimationFrame(load);
-	}
-}
-
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
-
+	
 	renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-function render() {
-	// Calculate delta time for animation purposes
-	let now = Date.now() / 1000;
-	let delta = now - lastFrameTime;
-	lastFrameTime = now;
-
-	// Update the animation
-	skeletonMesh.update(delta);
-
-	// Render the scene
-	renderer.render(scene, camera);
-
-	requestAnimationFrame(render);
 }
 
 export default App;
