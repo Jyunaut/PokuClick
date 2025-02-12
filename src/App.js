@@ -8,7 +8,6 @@ import {
 } from 'three';
 import * as spine from '@esotericsoftware/spine-threejs';
 import { gsap } from 'gsap';
-import { update } from 'three/examples/jsm/libs/tween.module.js';
 
 const STATUS = 'production';
 
