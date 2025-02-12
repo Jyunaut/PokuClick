@@ -296,12 +296,12 @@ let globalCounterIncrement;
 const isFlushingProxy = new Proxy({ value: false }, isFlushingHandler);
 let flushCounterIncrement;
 function flush() {
+	// Update the global counter from the firebase database
+	updateGlobalCounter(amountToFlush);
+
 	if (amountToFlush <= 0) {
 		return;
 	}
-
-	// Update the global counter from the firebase database
-	updateGlobalCounter(amountToFlush);
 
 	// Update the local counter from the local storage
 	if (flushCounterIncrement) {

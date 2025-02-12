@@ -66136,7 +66136,7 @@ void main() {
 	var atlas;
 	var atlasLoader;
 	var assetManager;
-	var baseUrl = '/assets/sprout/';
+	var baseUrl = '/PokuClick/assets/sprout/' ;
 	var skeletonFile = 'Sprout.json';
 	var atlasFile = skeletonFile.replace('-pro', '').replace('-ess', '').replace('.json', '.atlas');
 	var anim_idle = 'sitting';
@@ -66415,12 +66415,11 @@ void main() {
 	}, isFlushingHandler);
 	var flushCounterIncrement;
 	function flush() {
+	  // Update the global counter from the firebase database
+	  updateGlobalCounter(amountToFlush);
 	  if (amountToFlush <= 0) {
 	    return;
 	  }
-
-	  // Update the global counter from the firebase database
-	  updateGlobalCounter(amountToFlush);
 
 	  // Update the local counter from the local storage
 	  if (flushCounterIncrement) {
