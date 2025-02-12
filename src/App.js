@@ -8,12 +8,15 @@ import {
 } from 'three';
 import * as spine from '@esotericsoftware/spine-threejs';
 import { gsap } from 'gsap';
+import { db } from './firebase';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 const STATUS = 'production';
 
 // Update the global counter from the firebase database
 let globalCounter = 0;
 let globalCounterElement;
+updateGlobalCounter(0);
 
 // Update the local counter from the local storage
 let totalCounter = parseInt(localStorage.getItem('totalCounter')) || 0;
@@ -197,6 +200,19 @@ async function playIntro() {
 	}
 }
 
+async function updateGlobalCounter(amount) {
+	const globalCounterRef = doc(db, 'global', 'score');
+	const docSnap = await getDoc(globalCounterRef);
+	if (docSnap.exists()) {
+		globalCounter = docSnap.data().litersFlushed + amount;
+		await updateDoc(globalCounterRef, { litersFlushed: globalCounter });
+		if (globalCounterIncrement) {
+			clearInterval(globalCounterIncrement);
+		}
+		globalCounterIncrement = incrementCounter(globalCounterElement, globalCounter, amountToFlush);
+	}
+}
+
 function updateCounter() {
 	totalCounter++;
 	amountToFlush++;
@@ -285,13 +301,7 @@ function flush() {
 	}
 
 	// Update the global counter from the firebase database
-	if (globalCounterIncrement) {
-		clearInterval(globalCounterIncrement);
-	}
-	globalCounterIncrement = incrementCounter(globalCounterElement, globalCounter, amountToFlush);
-	globalCounter += amountToFlush;
-	localStorage.setItem('globalCounter', globalCounter);
-	// TODO: Update the firebase database with the global counter
+	updateGlobalCounter(amountToFlush);
 
 	// Update the local counter from the local storage
 	if (flushCounterIncrement) {
