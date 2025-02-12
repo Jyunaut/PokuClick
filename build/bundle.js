@@ -66326,7 +66326,7 @@ void main() {
 	          if (globalCounterIncrement) {
 	            clearInterval(globalCounterIncrement);
 	          }
-	          globalCounterIncrement = incrementCounter(globalCounterElement, globalCounter, amountToFlush);
+	          globalCounterIncrement = incrementGlobalCounter(globalCounterElement, globalCounter, amountToFlush);
 	        case 10:
 	        case "end":
 	          return _context2.stop();
@@ -66425,12 +66425,38 @@ void main() {
 	  if (flushCounterIncrement) {
 	    clearInterval(flushCounterIncrement);
 	  }
-	  flushCounterIncrement = incrementCounter(flushCounterElement, flushCounter, amountToFlush);
+	  flushCounterIncrement = incrementFlushCounter(flushCounterElement, flushCounter, amountToFlush);
 	  flushCounter += amountToFlush;
 	  localStorage.setItem('flushCounter', flushCounter);
 	  amountToFlush = 0;
 	}
-	function incrementCounter(counterElement, count, increment) {
+	function incrementGlobalCounter(counterElement, count, increment) {
+	  if (increment <= 0) {
+	    return;
+	  }
+	  var duration = 100;
+	  var endValue = count + increment;
+	  var interval = setInterval(function () {
+	    count++;
+	    counterElement.textContent = count;
+	    gsapWithCSS.fromTo(counterElement, {
+	      scale: 1
+	    }, {
+	      scale: 1.5,
+	      duration: 0.1,
+	      repeat: 1,
+	      yoyoEase: 'power2.out'
+	    });
+	    if (count >= endValue) {
+	      clearInterval(interval);
+	    }
+	  }, duration);
+	  return interval;
+	}
+	function incrementFlushCounter(counterElement, count, increment) {
+	  if (increment <= 0) {
+	    return;
+	  }
 	  var duration = 100;
 	  isFlushingProxy.value = true;
 	  var endValue = count + increment;

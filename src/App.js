@@ -209,7 +209,7 @@ async function updateGlobalCounter(amount) {
 		if (globalCounterIncrement) {
 			clearInterval(globalCounterIncrement);
 		}
-		globalCounterIncrement = incrementCounter(globalCounterElement, globalCounter, amountToFlush);
+		globalCounterIncrement = incrementGlobalCounter(globalCounterElement, globalCounter, amountToFlush);
 	}
 }
 
@@ -307,14 +307,43 @@ function flush() {
 	if (flushCounterIncrement) {
 		clearInterval(flushCounterIncrement);
 	}
-	flushCounterIncrement = incrementCounter(flushCounterElement, flushCounter, amountToFlush);
+	flushCounterIncrement = incrementFlushCounter(flushCounterElement, flushCounter, amountToFlush);
 	flushCounter += amountToFlush;
 	localStorage.setItem('flushCounter', flushCounter);
 
 	amountToFlush = 0;
 }
 
-function incrementCounter(counterElement, count, increment) {
+function incrementGlobalCounter(counterElement, count, increment) {
+	if (increment <= 0) {
+		return;
+	}
+
+	const duration = 100;
+	let endValue = count + increment;
+	let interval = setInterval(function () {
+		count++;
+		counterElement.textContent = count;
+		gsap.fromTo(counterElement, {
+			scale: 1
+		}, {
+			scale: 1.5,
+			duration: 0.1,
+			repeat: 1,
+			yoyoEase: 'power2.out',
+		});
+		if (count >= endValue) {
+			clearInterval(interval);
+		}
+	}, duration);
+	return interval;
+}
+
+function incrementFlushCounter(counterElement, count, increment) {
+	if (increment <= 0) {
+		return;
+	}
+
 	const duration = 100;
 	isFlushingProxy.value = true;
 	let endValue = count + increment;
