@@ -14,9 +14,10 @@ import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 const STATUS = 'production';
 
 // Update the global counter from the firebase database
-let globalCounter = 0;
+const globalCounterInterval = 10;
+let globalTimer = 0;
+let globalCounterToAdd = 0;
 let globalCounterElement;
-updateGlobalCounter(0);
 
 // Update the local counter from the local storage
 let totalCounter = parseInt(localStorage.getItem('totalCounter')) || 0;
@@ -29,8 +30,8 @@ let cpfCounterElement;
 let clickTimestamps = [];
 
 // Flush Counters
-const flushInterval = 5;
-let flushTimer = flushInterval;
+const flushInterval = 1;
+let flushTimer = 0;
 let amountToFlush = 0;
 let flushCounter = parseInt(localStorage.getItem('flushCounter')) || 0;
 let flushCounterElement;
@@ -93,7 +94,7 @@ class App {
 
 		// Update the global counter from the firebase database
 		globalCounterElement = document.getElementById('global-counter');
-		globalCounterElement.textContent = globalCounter;
+		updateGlobalCounter(0, 0);
 
 		// Update the local counter from the local storage	
 		totalCounterElement = document.getElementById('total-counter');
@@ -147,8 +148,9 @@ function render() {
 	// Update the animation
 	skeletonMesh.update(delta);
 
-	// Update the flush timer
+	// Update the timers
 	updateFlushTimer(delta);
+	updateGlobalTimer(delta);
 
 	// Render the scene
 	renderer.render(scene, camera);
@@ -200,17 +202,23 @@ async function playIntro() {
 	}
 }
 
-async function updateGlobalCounter(amount) {
+let globalCounterIncrement;
+async function updateGlobalCounter(amount, duration = 100) {
+	globalCounterToAdd = 0;
 	const globalCounterRef = doc(db, 'global', 'score');
 	const docSnap = await getDoc(globalCounterRef);
 	if (docSnap.exists()) {
-		globalCounter = docSnap.data().litersFlushed + amount;
-		await updateDoc(globalCounterRef, { litersFlushed: globalCounter });
-		if (globalCounterIncrement) {
-			clearInterval(globalCounterIncrement);
-		}
-		globalCounterIncrement = incrementGlobalCounter(globalCounterElement, globalCounter, amount);
+		const targetValue = docSnap.data().litersFlushed + amount;
+		incrementGlobalCounter(globalCounterElement, docSnap.data().litersFlushed, amount, duration);
+		await updateDoc(globalCounterRef, { litersFlushed: targetValue });
 	}
+}
+
+function incrementGlobalCounter(counterElement, count, increment, duration = 100) {
+	if (globalCounterIncrement) {
+		clearInterval(globalCounterIncrement);
+	}
+	globalCounterIncrement = incrementCounter(counterElement, count, increment, false, duration);
 }
 
 function updateCounter() {
@@ -284,6 +292,14 @@ function updateCPFCounter() {
 	cpfLastCount = totalCounter;
 }
 
+function updateGlobalTimer(deltaTime) {
+	globalTimer -= deltaTime;
+	if (globalTimer <= 0) {
+		globalTimer = globalCounterInterval;
+		updateGlobalCounter(globalCounterToAdd);
+	}
+}
+
 function updateFlushTimer(deltaTime) {
 	flushTimer -= deltaTime;
 	if (flushTimer <= 0) {
@@ -292,39 +308,66 @@ function updateFlushTimer(deltaTime) {
 	}
 }
 
-let globalCounterIncrement;
 const isFlushingProxy = new Proxy({ value: false }, isFlushingHandler);
 let flushCounterIncrement;
 function flush() {
 	// Update the global counter from the firebase database
-	updateGlobalCounter(amountToFlush);
-
-	if (amountToFlush <= 0) {
-		return;
-	}
+	globalCounterToAdd += amountToFlush;
 
 	// Update the local counter from the local storage
 	if (flushCounterIncrement) {
 		clearInterval(flushCounterIncrement);
 	}
-	flushCounterIncrement = incrementFlushCounter(flushCounterElement, flushCounter, amountToFlush);
+	flushCounterIncrement = incrementCounter(flushCounterElement, flushCounter, amountToFlush, true);
 	flushCounter += amountToFlush;
 	localStorage.setItem('flushCounter', flushCounter);
 
 	amountToFlush = 0;
 }
 
-function incrementGlobalCounter(counterElement, count, increment) {
-	if (increment <= 0) {
-		counterElement.textContent = count;
+function incrementCounter(counterElement, count, increment, updateFlushing = false, duration = 100) {
+	if (duration <= 0) {
+		counterElement.textContent = count + increment;
 		return;
 	}
 
-	const duration = 100;
+	let interval;
+	if (increment <= 0) {
+		if (count > parseInt(counterElement.textContent)) {
+			let startValue = parseInt(counterElement.textContent);
+			let endValue = count;
+			interval = setInterval(function () {
+				startValue++;
+				counterElement.textContent = startValue;
+				if (startValue >= endValue) {
+					clearInterval(interval);
+				}
+				gsap.fromTo(counterElement, {
+					scale: 1
+				}, {
+					scale: 1.5,
+					duration: 0.1,
+					repeat: 1,
+					yoyoEase: 'power2.out',
+				});
+			}, duration);
+		}
+		return interval;
+	}
+
+	if (updateFlushing) {
+		isFlushingProxy.value = true;
+	}
 	let endValue = count + increment;
-	let interval = setInterval(function () {
+	interval = setInterval(function () {
 		count++;
 		counterElement.textContent = count;
+		if (count >= endValue) {
+			clearInterval(interval);
+			if (updateFlushing) {
+				isFlushingProxy.value = false;
+			}
+		}
 		gsap.fromTo(counterElement, {
 			scale: 1
 		}, {
@@ -333,37 +376,6 @@ function incrementGlobalCounter(counterElement, count, increment) {
 			repeat: 1,
 			yoyoEase: 'power2.out',
 		});
-		if (count >= endValue) {
-			clearInterval(interval);
-		}
-	}, duration);
-	return interval;
-}
-
-function incrementFlushCounter(counterElement, count, increment) {
-	if (increment <= 0) {
-		counterElement.textContent = count
-		return;
-	}
-
-	const duration = 100;
-	isFlushingProxy.value = true;
-	let endValue = count + increment;
-	let interval = setInterval(function () {
-		count++;
-		counterElement.textContent = count;
-		gsap.fromTo(counterElement, {
-			scale: 1
-		}, {
-			scale: 1.5,
-			duration: 0.1,
-			repeat: 1,
-			yoyoEase: 'power2.out',
-		});
-		if (count >= endValue) {
-			clearInterval(interval);
-			isFlushingProxy.value = false;
-		}
 	}, duration);
 	return interval;
 }
