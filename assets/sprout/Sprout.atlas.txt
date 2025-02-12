@@ -1,0 +1,33 @@
+Sprout.png
+	size: 2240, 1192
+	filter: Linear, Linear
+arm_l
+	bounds: 1770, 4, 103, 416
+	rotate: 90
+arm_r
+	bounds: 1770, 109, 122, 377
+	rotate: 90
+body
+	bounds: 2, 2, 1185, 1206
+	offsets: 1, 1, 1187, 1208
+	rotate: 90
+eyes/eyes_closed
+	bounds: 1647, 373, 589, 144
+	offsets: 1, 1, 591, 146
+eyes/eyes_open
+	bounds: 1210, 38, 558, 161
+	offsets: 2, 1, 561, 163
+leg_l
+	bounds: 2153, 573, 55, 271
+leg_r
+	bounds: 2082, 579, 69, 265
+mouths/mouth_closed
+	bounds: 1647, 233, 477, 138
+	offsets: 1, 1, 479, 140
+mouths/mouth_open
+	bounds: 1647, 519, 433, 325
+	offsets: 1, 1, 435, 327
+rainbow
+	bounds: 1210, 201, 435, 643
+sprout
+	bounds: 1210, 846, 1002, 341
