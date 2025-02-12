@@ -66326,7 +66326,7 @@ void main() {
 	          if (globalCounterIncrement) {
 	            clearInterval(globalCounterIncrement);
 	          }
-	          globalCounterIncrement = incrementGlobalCounter(globalCounterElement, globalCounter, amountToFlush);
+	          globalCounterIncrement = incrementGlobalCounter(globalCounterElement, globalCounter, amount);
 	        case 10:
 	        case "end":
 	          return _context2.stop();
@@ -66432,6 +66432,7 @@ void main() {
 	}
 	function incrementGlobalCounter(counterElement, count, increment) {
 	  if (increment <= 0) {
+	    counterElement.textContent = count;
 	    return;
 	  }
 	  var duration = 100;
@@ -66455,6 +66456,7 @@ void main() {
 	}
 	function incrementFlushCounter(counterElement, count, increment) {
 	  if (increment <= 0) {
+	    counterElement.textContent = count;
 	    return;
 	  }
 	  var duration = 100;

@@ -209,7 +209,7 @@ async function updateGlobalCounter(amount) {
 		if (globalCounterIncrement) {
 			clearInterval(globalCounterIncrement);
 		}
-		globalCounterIncrement = incrementGlobalCounter(globalCounterElement, globalCounter, amountToFlush);
+		globalCounterIncrement = incrementGlobalCounter(globalCounterElement, globalCounter, amount);
 	}
 }
 
@@ -316,6 +316,7 @@ function flush() {
 
 function incrementGlobalCounter(counterElement, count, increment) {
 	if (increment <= 0) {
+		counterElement.textContent = count;
 		return;
 	}
 
@@ -341,6 +342,7 @@ function incrementGlobalCounter(counterElement, count, increment) {
 
 function incrementFlushCounter(counterElement, count, increment) {
 	if (increment <= 0) {
+		counterElement.textContent = count
 		return;
 	}
 
