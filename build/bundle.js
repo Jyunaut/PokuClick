@@ -66251,7 +66251,7 @@ void main() {
 
 	      // Setup the audio manager
 	      audioManager = new AudioManager();
-	      audioManager.loadAudio("../assets/Oof_04.wav");
+	      audioManager.loadAudio("/PokuClick/assets/Oof_04.wav");
 	      audioManager.setVolume(localStorage.getItem('volume') / 100 || 0.5);
 	      var volumeSliderElement = document.getElementById('volume-slider');
 	      volumeSliderElement.value = localStorage.getItem('volume') || 50;
@@ -66592,7 +66592,7 @@ void main() {
 	      return /*#__PURE__*/React.createElement("div", {
 	        className: "volume-slider-container"
 	      }, /*#__PURE__*/React.createElement("img", {
-	        src: "../assets/volume-icon.png",
+	        src: "/PokuClick/assets/volume-icon.png",
 	        alt: "Volume Icon",
 	        "class": "volume-icon"
 	      }), /*#__PURE__*/React.createElement("input", {

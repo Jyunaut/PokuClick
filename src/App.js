@@ -111,7 +111,7 @@ class App {
 
 		// Setup the audio manager
 		audioManager = new AudioManager();
-		audioManager.loadAudio("../assets/Oof_04.wav");
+		audioManager.loadAudio("/PokuClick/assets/Oof_04.wav");
 		audioManager.setVolume(localStorage.getItem('volume') / 100 || 0.5);
 		const volumeSliderElement = document.getElementById('volume-slider');
 		volumeSliderElement.value = localStorage.getItem('volume') || 50;

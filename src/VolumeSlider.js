@@ -4,7 +4,7 @@ class VolumeSlider extends React.Component {
     render() {
         return (
             <div className="volume-slider-container">
-                <img src="../assets/volume-icon.png" alt="Volume Icon" class="volume-icon"></img>
+                <img src="/PokuClick/assets/volume-icon.png" alt="Volume Icon" class="volume-icon"></img>
                 <input
                     type="range"
                     id="volume-slider"
