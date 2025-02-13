@@ -45,6 +45,7 @@ let skeletonMesh;
 let atlas;
 let atlasLoader;
 let assetManager;
+// const baseUrl = '../assets/sprout/';
 const baseUrl = '/PokuClick/assets/sprout/';
 const skeletonFile = 'Sprout.json';
 let atlasFile = skeletonFile
