@@ -518,14 +518,6 @@
 	    writable: !1
 	  }), e;
 	}
-	function _defineProperty(e, r, t) {
-	  return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
-	    value: t,
-	    enumerable: !0,
-	    configurable: !0,
-	    writable: !0
-	  }) : e[r] = t, e;
-	}
 	function _getPrototypeOf(t) {
 	  return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) {
 	    return t.__proto__ || Object.getPrototypeOf(t);
@@ -1172,7 +1164,7 @@
 	}
 
 	// https://en.wikipedia.org/wiki/Linear_interpolation
-	function lerp( x, y, t ) {
+	function lerp$1( x, y, t ) {
 
 		return ( 1 - t ) * x + t * y;
 
@@ -9498,9 +9490,9 @@
 			this.getHSL( _hslA );
 			color.getHSL( _hslB );
 
-			const h = lerp( _hslA.h, _hslB.h, alpha );
-			const s = lerp( _hslA.s, _hslB.s, alpha );
-			const l = lerp( _hslA.l, _hslB.l, alpha );
+			const h = lerp$1( _hslA.h, _hslB.h, alpha );
+			const s = lerp$1( _hslA.s, _hslB.s, alpha );
+			const l = lerp$1( _hslA.l, _hslB.l, alpha );
 
 			this.setHSL( h, s, l );
 
@@ -66104,8 +66096,65 @@ void main() {
 	var app$1 = initializeApp(firebaseConfig);
 	var db = getFirestore(app$1);
 
+	var AudioManager = /*#__PURE__*/function () {
+	  function AudioManager() {
+	    _classCallCheck(this, AudioManager);
+	    this.audioContext = new AudioContext();
+	    this.audioBuffer = null;
+	    this.gainNode = this.audioContext.createGain();
+	    this.gainNode.connect(this.audioContext.destination);
+	  }
+	  return _createClass(AudioManager, [{
+	    key: "loadAudio",
+	    value: function () {
+	      var _loadAudio = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee(url) {
+	        var response, arrayBuffer;
+	        return _regeneratorRuntime().wrap(function _callee$(_context) {
+	          while (1) switch (_context.prev = _context.next) {
+	            case 0:
+	              _context.next = 2;
+	              return fetch(url);
+	            case 2:
+	              response = _context.sent;
+	              _context.next = 5;
+	              return response.arrayBuffer();
+	            case 5:
+	              arrayBuffer = _context.sent;
+	              _context.next = 8;
+	              return this.audioContext.decodeAudioData(arrayBuffer);
+	            case 8:
+	              this.audioBuffer = _context.sent;
+	            case 9:
+	            case "end":
+	              return _context.stop();
+	          }
+	        }, _callee, this);
+	      }));
+	      function loadAudio(_x) {
+	        return _loadAudio.apply(this, arguments);
+	      }
+	      return loadAudio;
+	    }()
+	  }, {
+	    key: "playSFX",
+	    value: function playSFX() {
+	      var source = this.audioContext.createBufferSource();
+	      source.buffer = this.audioBuffer;
+	      source.playbackRate.value = Math.random() * 0.5 + 1.25; // Random pitch between 1.25 and 1.75
+	      source.connect(this.gainNode);
+	      source.start(0);
+	    }
+	  }, {
+	    key: "setVolume",
+	    value: function setVolume(value) {
+	      this.gainNode.gain.value = value;
+	      console.log(this.gainNode.gain.value);
+	    }
+	  }]);
+	}();
+
 	// Update the global counter from the firebase database
-	var globalCounterInterval = 10;
+	var globalCounterInterval = 30;
 	var globalTimer = 0;
 	var globalCounterToAdd = 0;
 	var globalCounterElement;
@@ -66121,7 +66170,7 @@ void main() {
 	var clickTimestamps = [];
 
 	// Flush Counters
-	var flushInterval = 1;
+	var flushInterval = 2;
 	var flushTimer = 0;
 	var amountToFlush = 0;
 	var flushCounter = parseInt(localStorage.getItem('flushCounter')) || 0;
@@ -66137,7 +66186,7 @@ void main() {
 	var atlas;
 	var atlasLoader;
 	var assetManager;
-	var baseUrl = '/PokuClick/assets/sprout/' ;
+	var baseUrl = '../assets/sprout/';
 	var skeletonFile = 'Sprout.json';
 	var atlasFile = skeletonFile.replace('-pro', '').replace('-ess', '').replace('.json', '.atlas');
 	var anim_idle = 'sitting';
@@ -66146,6 +66195,9 @@ void main() {
 	var anim_pressed = 'sitting_press';
 	var anim_sitting_mouth_open = 'sitting_mouthOpen';
 	var anim_pressed_rainbow = 'sitting_press_rainbow';
+
+	// Audio variables
+	var audioManager;
 	var App = /*#__PURE__*/function () {
 	  function App() {
 	    _classCallCheck(this, App);
@@ -66195,6 +66247,18 @@ void main() {
 	      flushCounterElement = document.getElementById('flushed-counter');
 	      flushCounterElement.textContent = flushCounter;
 	      clickTimestamps = [];
+
+	      // Setup the audio manager
+	      audioManager = new AudioManager();
+	      audioManager.loadAudio("../assets/Oof_04.wav");
+	      audioManager.setVolume(localStorage.getItem('volume') / 100 || 0.5);
+	      var volumeSliderElement = document.getElementById('volume-slider');
+	      volumeSliderElement.value = localStorage.getItem('volume') || 50;
+	      var volumeSlider = document.getElementById('volume-slider');
+	      volumeSlider.addEventListener('input', function () {
+	        audioManager.setVolume(volumeSlider.value / 100);
+	        localStorage.setItem('volume', volumeSlider.value);
+	      });
 	      setInterval(updateCPFCounter, 1000);
 	    }
 	  }]);
@@ -66237,6 +66301,9 @@ void main() {
 	  updateFlushTimer(delta);
 	  updateGlobalTimer(delta);
 
+	  // Update the water level
+	  updateWaterLevel(delta);
+
 	  // Render the scene
 	  renderer.render(scene, camera);
 	  requestAnimationFrame(render);
@@ -66257,6 +66324,7 @@ void main() {
 	  if (intersects.length > 0) {
 	    playPressedAnimation();
 	    updateCounter();
+	    audioManager.playSFX();
 	  }
 	}
 	function playIntro() {
@@ -66355,9 +66423,9 @@ void main() {
 
 	  // Animate the local counter using GSAP
 	  gsapWithCSS.fromTo(totalCounterElement, {
-	    scale: 1
+	    y: 0
 	  }, {
-	    scale: 1.5,
+	    y: -5,
 	    duration: 0.1,
 	    repeat: 1,
 	    yoyoEase: 'power2.out'
@@ -66462,11 +66530,14 @@ void main() {
 	        counterElement.textContent = startValue;
 	        if (startValue >= _endValue) {
 	          clearInterval(interval);
+	          if (updateFlushing) {
+	            isFlushingProxy.value = false;
+	          }
 	        }
 	        gsapWithCSS.fromTo(counterElement, {
-	          scale: 1
+	          y: 0
 	        }, {
-	          scale: 1.5,
+	          y: -5,
 	          duration: 0.1,
 	          repeat: 1,
 	          yoyoEase: 'power2.out'
@@ -66475,7 +66546,7 @@ void main() {
 	    }
 	    return interval;
 	  }
-	  if (updateFlushing) {
+	  if (updateFlushing && increment >= 5) {
 	    isFlushingProxy.value = true;
 	  }
 	  var endValue = count + increment;
@@ -66489,9 +66560,9 @@ void main() {
 	      }
 	    }
 	    gsapWithCSS.fromTo(counterElement, {
-	      scale: 1
+	      y: 0
 	    }, {
-	      scale: 1.5,
+	      y: -5,
 	      duration: 0.1,
 	      repeat: 1,
 	      yoyoEase: 'power2.out'
@@ -66499,19 +66570,19 @@ void main() {
 	  }, duration);
 	  return interval;
 	}
+	function updateWaterLevel(deltaTime) {
+	  var waterElement = document.querySelector('.water');
+	  var value = lerp(waterElement.style.height.replace('%', ''), amountToFlush * 2, deltaTime * 0.8);
+	  waterElement.style.height = "".concat(value, "%");
+	}
+	function lerp(start, end, t) {
+	  return start * (1 - t) + end * t;
+	}
 
 	var VolumeSlider = /*#__PURE__*/function (_React$Component) {
 	  function VolumeSlider() {
-	    var _this;
 	    _classCallCheck(this, VolumeSlider);
-	    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-	      args[_key] = arguments[_key];
-	    }
-	    _this = _callSuper(this, VolumeSlider, [].concat(args));
-	    _defineProperty(_this, "handleVolumeChange", function (event) {
-	      event.target.value;
-	    });
-	    return _this;
+	    return _callSuper(this, VolumeSlider, arguments);
 	  }
 	  _inherits(VolumeSlider, _React$Component);
 	  return _createClass(VolumeSlider, [{
@@ -66519,13 +66590,16 @@ void main() {
 	    value: function render() {
 	      return /*#__PURE__*/React.createElement("div", {
 	        className: "volume-slider-container"
-	      }, /*#__PURE__*/React.createElement("input", {
+	      }, /*#__PURE__*/React.createElement("img", {
+	        src: "../assets/volume-icon.png",
+	        alt: "Volume Icon",
+	        "class": "volume-icon"
+	      }), /*#__PURE__*/React.createElement("input", {
 	        type: "range",
 	        id: "volume-slider",
 	        min: "0",
 	        max: "100",
-	        defaultValue: "50",
-	        onInput: this.handleVolumeChange
+	        defaultValue: "50"
 	      }));
 	    }
 	  }]);
@@ -66542,7 +66616,7 @@ void main() {
 	    value: function render() {
 	      return /*#__PURE__*/React.createElement("div", {
 	        className: "click-counter-container"
-	      }, /*#__PURE__*/React.createElement("label", {
+	      }, /*#__PURE__*/React.createElement("h1", {
 	        htmlFor: "click-counter"
 	      }, this.props.label), /*#__PURE__*/React.createElement("h1", {
 	        id: this.props.id
@@ -66552,7 +66626,9 @@ void main() {
 	}(React.Component);
 
 	// Render the React component
-	ReactDOM.render(/*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(VolumeSlider, null), /*#__PURE__*/React.createElement(ClickCounter, {
+	ReactDOM.render(/*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(VolumeSlider, null), /*#__PURE__*/React.createElement("div", {
+	  id: "counters"
+	}, /*#__PURE__*/React.createElement(ClickCounter, {
 	  id: "global-counter",
 	  label: "Liters Flushed (Global)"
 	}), /*#__PURE__*/React.createElement(ClickCounter, {
@@ -66564,7 +66640,7 @@ void main() {
 	}), /*#__PURE__*/React.createElement(ClickCounter, {
 	  id: "total-counter",
 	  label: "Clicks"
-	})), document.getElementById('root'));
+	}))), document.getElementById('root'));
 	var app = new App();
 	app.init();
 

@@ -8,10 +8,12 @@ import ClickCounter from './ClickCounter';
 ReactDOM.render(
     <div>
         <VolumeSlider />
-        <ClickCounter id="global-counter" label="Liters Flushed (Global)" />
-        <ClickCounter id="flushed-counter" label="Liters Flushed (Yours)" />
-        <ClickCounter id="cpf-counter" label="Liters Per Flush" />
-        <ClickCounter id="total-counter" label="Clicks" />
+        <div id="counters">
+            <ClickCounter id="global-counter" label="Liters Flushed (Global)" />
+            <ClickCounter id="flushed-counter" label="Liters Flushed (Yours)" />
+            <ClickCounter id="cpf-counter" label="Liters Per Flush" />
+            <ClickCounter id="total-counter" label="Clicks" />
+        </div>
     </div>,
     document.getElementById('root')
 );

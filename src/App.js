@@ -9,12 +9,11 @@ import {
 import * as spine from '@esotericsoftware/spine-threejs';
 import { gsap } from 'gsap';
 import { db } from './firebase';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-
-const STATUS = 'production';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import AudioManager from './AudioManager';
 
 // Update the global counter from the firebase database
-const globalCounterInterval = 10;
+const globalCounterInterval = 30;
 let globalTimer = 0;
 let globalCounterToAdd = 0;
 let globalCounterElement;
@@ -30,7 +29,7 @@ let cpfCounterElement;
 let clickTimestamps = [];
 
 // Flush Counters
-const flushInterval = 1;
+const flushInterval = 2;
 let flushTimer = 0;
 let amountToFlush = 0;
 let flushCounter = parseInt(localStorage.getItem('flushCounter')) || 0;
@@ -46,9 +45,7 @@ let skeletonMesh;
 let atlas;
 let atlasLoader;
 let assetManager;
-const baseUrl = STATUS === 'production'
-	? '/PokuClick/assets/sprout/'
-	: '/assets/sprout/';
+const baseUrl = '../assets/sprout/';
 const skeletonFile = 'Sprout.json';
 let atlasFile = skeletonFile
 	.replace('-pro', '')
@@ -60,6 +57,9 @@ let anim_run_stop = 'run_stop';
 let anim_pressed = 'sitting_press';
 let anim_sitting_mouth_open = 'sitting_mouthOpen';
 let anim_pressed_rainbow = 'sitting_press_rainbow';
+
+// Audio variables
+let audioManager;
 
 class App {
 	init() {
@@ -108,6 +108,18 @@ class App {
 		flushCounterElement.textContent = flushCounter;
 		clickTimestamps = [];
 
+		// Setup the audio manager
+		audioManager = new AudioManager();
+		audioManager.loadAudio("../assets/Oof_04.wav");
+		audioManager.setVolume(localStorage.getItem('volume') / 100 || 0.5);
+		const volumeSliderElement = document.getElementById('volume-slider');
+		volumeSliderElement.value = localStorage.getItem('volume') || 50;
+		const volumeSlider = document.getElementById('volume-slider');
+		volumeSlider.addEventListener('input', function () {
+			audioManager.setVolume(volumeSlider.value / 100);
+			localStorage.setItem('volume', volumeSlider.value);
+		});
+
 		setInterval(updateCPFCounter, 1000);
 	}
 }
@@ -152,6 +164,9 @@ function render() {
 	updateFlushTimer(delta);
 	updateGlobalTimer(delta);
 
+	// Update the water level
+	updateWaterLevel(delta);
+
 	// Render the scene
 	renderer.render(scene, camera);
 
@@ -174,6 +189,7 @@ function onCanvasClick(event) {
 	if (intersects.length > 0) {
 		playPressedAnimation();
 		updateCounter();
+		audioManager.playSFX();
 	}
 }
 
@@ -229,9 +245,9 @@ function updateCounter() {
 
 	// Animate the local counter using GSAP
 	gsap.fromTo(totalCounterElement, {
-		scale: 1
+		y: 0
 	}, {
-		scale: 1.5,
+		y: -5,
 		duration: 0.1,
 		repeat: 1,
 		yoyoEase: 'power2.out',
@@ -341,11 +357,14 @@ function incrementCounter(counterElement, count, increment, updateFlushing = fal
 				counterElement.textContent = startValue;
 				if (startValue >= endValue) {
 					clearInterval(interval);
+					if (updateFlushing) {
+						isFlushingProxy.value = false;
+					}
 				}
 				gsap.fromTo(counterElement, {
-					scale: 1
+					y: 0
 				}, {
-					scale: 1.5,
+					y: -5,
 					duration: 0.1,
 					repeat: 1,
 					yoyoEase: 'power2.out',
@@ -355,7 +374,7 @@ function incrementCounter(counterElement, count, increment, updateFlushing = fal
 		return interval;
 	}
 
-	if (updateFlushing) {
+	if (updateFlushing && increment >= 5) {
 		isFlushingProxy.value = true;
 	}
 	let endValue = count + increment;
@@ -369,15 +388,25 @@ function incrementCounter(counterElement, count, increment, updateFlushing = fal
 			}
 		}
 		gsap.fromTo(counterElement, {
-			scale: 1
+			y: 0
 		}, {
-			scale: 1.5,
+			y: -5,
 			duration: 0.1,
 			repeat: 1,
 			yoyoEase: 'power2.out',
 		});
 	}, duration);
 	return interval;
+}
+
+function updateWaterLevel(deltaTime) {
+	const waterElement = document.querySelector('.water');
+	const value = lerp(waterElement.style.height.replace('%', ''), amountToFlush * 2, deltaTime * 0.8);
+	waterElement.style.height = `${value}%`;
+}
+
+function lerp(start, end, t) {
+	return start * (1 - t) + end * t;
 }
 
 export default App;
