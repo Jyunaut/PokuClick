@@ -66110,14 +66110,19 @@ void main() {
 	  function AudioManager() {
 	    _classCallCheck(this, AudioManager);
 	    this.audioContext = new AudioContext();
-	    this.audioBuffer = null;
-	    this.gainNode = this.audioContext.createGain();
-	    this.gainNode.connect(this.audioContext.destination);
+	    this.sfxBuffer = null;
+	    this.musicBuffer = null;
+	    this.musicSource = null;
+	    this.sfxGainNode = this.audioContext.createGain();
+	    this.musicGainNode = this.audioContext.createGain();
+	    this.sfxGainNode.connect(this.audioContext.destination);
+	    this.musicGainNode.connect(this.audioContext.destination);
+	    this.stopMusicTime = 0;
 	  }
 	  return _createClass(AudioManager, [{
-	    key: "loadAudio",
+	    key: "loadSFX",
 	    value: function () {
-	      var _loadAudio = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee(url) {
+	      var _loadSFX = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee(url) {
 	        var response, arrayBuffer;
 	        return _regeneratorRuntime().wrap(function _callee$(_context) {
 	          while (1) switch (_context.prev = _context.next) {
@@ -66133,32 +66138,119 @@ void main() {
 	              _context.next = 8;
 	              return this.audioContext.decodeAudioData(arrayBuffer);
 	            case 8:
-	              this.audioBuffer = _context.sent;
+	              this.sfxBuffer = _context.sent;
 	            case 9:
 	            case "end":
 	              return _context.stop();
 	          }
 	        }, _callee, this);
 	      }));
-	      function loadAudio(_x) {
-	        return _loadAudio.apply(this, arguments);
+	      function loadSFX(_x) {
+	        return _loadSFX.apply(this, arguments);
 	      }
-	      return loadAudio;
+	      return loadSFX;
+	    }()
+	  }, {
+	    key: "loadMusic",
+	    value: function () {
+	      var _loadMusic = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee2(url) {
+	        var response, arrayBuffer;
+	        return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+	          while (1) switch (_context2.prev = _context2.next) {
+	            case 0:
+	              _context2.next = 2;
+	              return fetch(url);
+	            case 2:
+	              response = _context2.sent;
+	              _context2.next = 5;
+	              return response.arrayBuffer();
+	            case 5:
+	              arrayBuffer = _context2.sent;
+	              _context2.next = 8;
+	              return this.audioContext.decodeAudioData(arrayBuffer);
+	            case 8:
+	              this.musicBuffer = _context2.sent;
+	            case 9:
+	            case "end":
+	              return _context2.stop();
+	          }
+	        }, _callee2, this);
+	      }));
+	      function loadMusic(_x2) {
+	        return _loadMusic.apply(this, arguments);
+	      }
+	      return loadMusic;
 	    }()
 	  }, {
 	    key: "playSFX",
 	    value: function playSFX() {
 	      var source = this.audioContext.createBufferSource();
-	      source.buffer = this.audioBuffer;
+	      source.buffer = this.sfxBuffer;
 	      source.playbackRate.value = Math.random() * 0.5 + 1.25; // Random pitch between 1.25 and 1.75
-	      source.connect(this.gainNode);
+	      source.connect(this.sfxGainNode);
 	      source.start(0);
 	    }
 	  }, {
-	    key: "setVolume",
-	    value: function setVolume(value) {
-	      this.gainNode.gain.value = value;
-	      console.log(this.gainNode.gain.value);
+	    key: "setSFXVolume",
+	    value: function setSFXVolume(value) {
+	      this.sfxGainNode.gain.value = value;
+	      console.log('SFX Volume:', this.sfxGainNode.gain.value);
+	    }
+	  }, {
+	    key: "setMusicVolume",
+	    value: function setMusicVolume(value) {
+	      this.musicGainNode.gain.value = value;
+	      console.log('Music Volume:', this.musicGainNode.gain.value);
+	    }
+	  }, {
+	    key: "playMusic",
+	    value: function playMusic() {
+	      var loop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+	      var resume = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+	      if (this.musicSource) {
+	        this.musicSource.stop();
+	      }
+	      this.musicSource = this.audioContext.createBufferSource();
+	      this.musicSource.buffer = this.musicBuffer;
+	      this.musicSource.loop = loop;
+	      this.musicSource.connect(this.musicGainNode);
+	      var startTime = resume ? this.stopMusicTime : 0;
+	      this.musicSource.start(0, startTime);
+	    }
+	  }, {
+	    key: "fadeInMusic",
+	    value: function fadeInMusic() {
+	      var duration = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+	      var volume = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0.5;
+	      var resume = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+	      this.musicGainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+	      this.musicGainNode.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + duration);
+	      this.playMusic(true, resume);
+	    }
+	  }, {
+	    key: "fadeOutMusic",
+	    value: function fadeOutMusic() {
+	      var _this = this;
+	      var duration = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+	      this.musicGainNode.gain.setValueAtTime(this.musicGainNode.gain.value, this.audioContext.currentTime);
+	      this.musicGainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + duration);
+	      setTimeout(function () {
+	        _this.stopMusic();
+	      }, duration * 1000);
+	    }
+	  }, {
+	    key: "stopMusic",
+	    value: function stopMusic() {
+	      if (this.musicSource) {
+	        this.stopMusicTime = this.musicSource.context.currentTime;
+	        this.musicSource.stop();
+	        this.musicSource = null;
+	      }
+	    }
+	  }, {
+	    key: "resumeMusic",
+	    value: function resumeMusic() {
+	      this.playMusic();
 	    }
 	  }]);
 	}();
@@ -66237,7 +66329,7 @@ void main() {
 	  triangle.style.borderLeft = '10px solid transparent';
 	  triangle.style.borderRight = '10px solid transparent';
 	  triangle.style.borderBottom = '10px solid white';
-	  triangle.style.maskImage = 'linear-gradient(to top, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0))';
+	  triangle.style.maskImage = 'linear-gradient(to top, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.8))';
 	  triangle.style.borderBottomWidth = "".concat(Math.random() * (this.maxLength - this.minLength) + this.minLength, "px");
 	  triangle.style.opacity = this.opacity;
 	  triangle.style.zIndex = 1000;
@@ -66262,6 +66354,7 @@ void main() {
 	var globalTimer = 30;
 	var globalCounterToAdd = 0;
 	var globalCounterElement;
+	var globalCounterLabelElement;
 
 	// Update the local counter from the local storage
 	var totalCounter = parseInt(localStorage.getItem('totalCounter')) || 0;
@@ -66270,7 +66363,6 @@ void main() {
 	// Update the clicks per flush counter every 10 seconds
 	var cpfCounter = 0;
 	var cpfLastCount = 0;
-	var cpfCounterElement;
 	var clickTimestamps = [];
 
 	// Flush Counters
@@ -66304,7 +66396,7 @@ void main() {
 	var audioManager;
 
 	// Speed lines effect
-	var speedLinesEffect = new SpeedLinesEffect(20, 400, 900, 1);
+	var speedLinesEffect = new SpeedLinesEffect(20, 600, 1100, 1);
 	var App = /*#__PURE__*/function () {
 	  function App() {
 	    _classCallCheck(this, App);
@@ -66341,6 +66433,7 @@ void main() {
 
 	      // Update the global counter from the firebase database
 	      globalCounterElement = document.getElementById('global-counter');
+	      globalCounterLabelElement = document.getElementById('global-counter-label');
 	      updateGlobalCounter(0, 0);
 
 	      // Update the local counter from the local storage	
@@ -66350,20 +66443,23 @@ void main() {
 	      // Update the clicks per flush counter every 10 seconds
 	      cpfCounter = 0;
 	      cpfLastCount = totalCounter;
-	      cpfCounterElement = document.getElementById('cpf-counter');
+	      // cpfCounterElement = document.getElementById('cpf-counter');
 	      flushCounterElement = document.getElementById('flushed-counter');
 	      flushCounterElement.textContent = flushCounter;
 	      clickTimestamps = [];
 
 	      // Setup the audio manager
 	      audioManager = new AudioManager();
-	      audioManager.loadAudio(baseUrl + "Oof_04.wav");
-	      audioManager.setVolume(localStorage.getItem('volume') / 100 || 0.5);
+	      audioManager.loadSFX(baseUrl + "Oof_04.wav");
+	      audioManager.loadMusic(baseUrl + "MIRAGE Instrumental.mp3");
+	      audioManager.setSFXVolume(localStorage.getItem('volume') / 100 || 0.5);
+	      audioManager.setMusicVolume(localStorage.getItem('volume') / 100 || 0.5);
 	      var volumeSliderElement = document.getElementById('volume-slider');
 	      volumeSliderElement.value = localStorage.getItem('volume') || 50;
 	      var volumeSlider = document.getElementById('volume-slider');
 	      volumeSlider.addEventListener('input', function () {
-	        audioManager.setVolume(volumeSlider.value / 100);
+	        audioManager.setSFXVolume(volumeSlider.value / 100);
+	        audioManager.setMusicVolume(volumeSlider.value / 100);
 	        localStorage.setItem('volume', volumeSlider.value);
 	      });
 	      setInterval(updateCPFCounter, 1000);
@@ -66596,7 +66692,7 @@ void main() {
 	    sum += clickTimestamps[i];
 	  }
 	  cpfCounter = flushInterval * sum / clickTimestamps.length;
-	  cpfCounterElement.textContent = cpfCounter.toFixed(0);
+	  // cpfCounterElement.textContent = cpfCounter.toFixed(0);
 	  cpfLastCount = totalCounter;
 	}
 	function updateGlobalTimer(deltaTime) {
@@ -66605,6 +66701,11 @@ void main() {
 	    globalTimer = globalCounterInterval;
 	    updateGlobalCounter(globalCounterToAdd);
 	  }
+
+	  // Update global counter label
+	  var time = globalTimer.toFixed(0);
+	  var label = "Liters Flushed (Global) <span style=\"color: #45811a;\">Update in ".concat(time, "</span>");
+	  globalCounterLabelElement.innerHTML = label;
 	}
 	function updateFlushTimer(deltaTime) {
 	  flushTimer -= deltaTime;
@@ -66694,18 +66795,30 @@ void main() {
 	}
 	var initialDStateInterval = 0.03;
 	var initialDStateTimer = initialDStateInterval;
+	var initialDStateFlagDoOnce = false;
+	var initialDStateFlag = false;
 	function updateInitialDState(deltaTime) {
 	  if (initialDStateTimer > 0) {
 	    initialDStateTimer -= deltaTime;
 	  } else {
 	    initialDStateTimer = initialDStateInterval;
 	    if (cpfCounter > 10) {
+	      if (!initialDStateFlagDoOnce) {
+	        initialDStateFlagDoOnce = true;
+	        audioManager.playMusic(true);
+	        audioManager.fadeInMusic(1, localStorage.getItem('volume') / 100 || 0.5, true);
+	      } else if (!initialDStateFlag) {
+	        initialDStateFlag = true;
+	        audioManager.fadeInMusic(1, localStorage.getItem('volume') / 100 || 0.5, true);
+	      }
 	      speedLinesEffect.enableSpeedLines();
 	      speedLinesEffect.shiftPositions(30);
-	      console.log('Speed lines enabled');
 	    } else {
+	      if (initialDStateFlag) {
+	        initialDStateFlag = false;
+	        audioManager.fadeOutMusic(1);
+	      }
 	      speedLinesEffect.disableSpeedLines();
-	      console.log('Speed lines disabled');
 	    }
 	  }
 	}
@@ -66751,6 +66864,7 @@ void main() {
 	      return /*#__PURE__*/React.createElement("div", {
 	        className: "click-counter-container"
 	      }, /*#__PURE__*/React.createElement("h1", {
+	        id: this.props.id + "-label",
 	        htmlFor: "click-counter"
 	      }, this.props.label), /*#__PURE__*/React.createElement("h1", {
 	        id: this.props.id
@@ -66767,10 +66881,7 @@ void main() {
 	  label: "Liters Flushed (Global)"
 	}), /*#__PURE__*/React.createElement(ClickCounter, {
 	  id: "flushed-counter",
-	  label: "Liters Flushed (Yours)"
-	}), /*#__PURE__*/React.createElement(ClickCounter, {
-	  id: "cpf-counter",
-	  label: "Liters Per Flush"
+	  label: "Liters Flushed"
 	}), /*#__PURE__*/React.createElement(ClickCounter, {
 	  id: "total-counter",
 	  label: "Clicks"

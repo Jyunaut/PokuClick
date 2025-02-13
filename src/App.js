@@ -20,6 +20,7 @@ const globalCounterInterval = 30;
 let globalTimer = 30;
 let globalCounterToAdd = 0;
 let globalCounterElement;
+let globalCounterLabelElement;
 
 // Update the local counter from the local storage
 let totalCounter = parseInt(localStorage.getItem('totalCounter')) || 0;
@@ -67,7 +68,7 @@ let anim_pressed_rainbow = 'sitting_press_rainbow';
 let audioManager;
 
 // Speed lines effect
-let speedLinesEffect = new SpeedLinesEffect(20, 400, 900, 1);
+let speedLinesEffect = new SpeedLinesEffect(20, 600, 1100, 1);
 
 class App {
 	init() {
@@ -102,6 +103,7 @@ class App {
 
 		// Update the global counter from the firebase database
 		globalCounterElement = document.getElementById('global-counter');
+		globalCounterLabelElement = document.getElementById('global-counter-label');
 		updateGlobalCounter(0, 0);
 
 		// Update the local counter from the local storage	
@@ -111,20 +113,23 @@ class App {
 		// Update the clicks per flush counter every 10 seconds
 		cpfCounter = 0;
 		cpfLastCount = totalCounter;
-		cpfCounterElement = document.getElementById('cpf-counter');
+		// cpfCounterElement = document.getElementById('cpf-counter');
 		flushCounterElement = document.getElementById('flushed-counter');
 		flushCounterElement.textContent = flushCounter;
 		clickTimestamps = [];
 
 		// Setup the audio manager
 		audioManager = new AudioManager();
-		audioManager.loadAudio(baseUrl + "Oof_04.wav");
-		audioManager.setVolume(localStorage.getItem('volume') / 100 || 0.5);
+		audioManager.loadSFX(baseUrl + "Oof_04.wav");
+		audioManager.loadMusic(baseUrl + "MIRAGE Instrumental.mp3");
+		audioManager.setSFXVolume(localStorage.getItem('volume') / 100 || 0.5);
+		audioManager.setMusicVolume(localStorage.getItem('volume') / 100 || 0.5);
 		const volumeSliderElement = document.getElementById('volume-slider');
 		volumeSliderElement.value = localStorage.getItem('volume') || 50;
 		const volumeSlider = document.getElementById('volume-slider');
 		volumeSlider.addEventListener('input', function () {
-			audioManager.setVolume(volumeSlider.value / 100);
+			audioManager.setSFXVolume(volumeSlider.value / 100);
+			audioManager.setMusicVolume(volumeSlider.value / 100);
 			localStorage.setItem('volume', volumeSlider.value);
 		});
 
@@ -319,7 +324,7 @@ function updateCPFCounter() {
 		sum += clickTimestamps[i];
 	}
 	cpfCounter = flushInterval * sum / clickTimestamps.length;
-	cpfCounterElement.textContent = cpfCounter.toFixed(0);
+	// cpfCounterElement.textContent = cpfCounter.toFixed(0);
 	cpfLastCount = totalCounter;
 }
 
@@ -329,6 +334,11 @@ function updateGlobalTimer(deltaTime) {
 		globalTimer = globalCounterInterval;
 		updateGlobalCounter(globalCounterToAdd);
 	}
+	
+	// Update global counter label
+	const time = globalTimer.toFixed(0);
+	const label = `Liters Flushed (Global) <span style="color: #45811a;">Update in ${time}</span>`;
+	globalCounterLabelElement.innerHTML = label;
 }
 
 function updateFlushTimer(deltaTime) {
@@ -422,18 +432,30 @@ function updateWaterLevel(deltaTime) {
 
 const initialDStateInterval = 0.03;
 let initialDStateTimer = initialDStateInterval;
+let initialDStateFlagDoOnce = false;
+let initialDStateFlag = false;
 function updateInitialDState(deltaTime) {
 	if (initialDStateTimer > 0) {
 		initialDStateTimer -= deltaTime;
 	} else {
 		initialDStateTimer = initialDStateInterval;
 		if (cpfCounter > 10) {
+			if (!initialDStateFlagDoOnce) {
+				initialDStateFlagDoOnce = true;
+				audioManager.playMusic(true);
+				audioManager.fadeInMusic(1, localStorage.getItem('volume') / 100 || 0.5, true);
+			} else if (!initialDStateFlag) {
+				initialDStateFlag = true;
+				audioManager.fadeInMusic(1, localStorage.getItem('volume') / 100 || 0.5, true);
+			}
 			speedLinesEffect.enableSpeedLines();
 			speedLinesEffect.shiftPositions(30);
-			console.log('Speed lines enabled');
 		} else {
+			if (initialDStateFlag) {
+				initialDStateFlag = false;
+				audioManager.fadeOutMusic(1);
+			}
 			speedLinesEffect.disableSpeedLines();
-			console.log('Speed lines disabled');
 		}
 	}
 }

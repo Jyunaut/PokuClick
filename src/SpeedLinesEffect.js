@@ -60,7 +60,7 @@ class SpeedLinesEffect {
         triangle.style.borderLeft = '10px solid transparent';
         triangle.style.borderRight = '10px solid transparent';
         triangle.style.borderBottom = '10px solid white';
-        triangle.style.maskImage = 'linear-gradient(to top, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0))';
+        triangle.style.maskImage = 'linear-gradient(to top, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.8))';
         triangle.style.borderBottomWidth = `${Math.random() * (this.maxLength - this.minLength) + this.minLength}px`;
         triangle.style.opacity = this.opacity;
         triangle.style.zIndex = 1000;
