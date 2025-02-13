@@ -66590,30 +66590,29 @@ void main() {
 	      while (1) switch (_context2.prev = _context2.next) {
 	        case 0:
 	          duration = _args2.length > 1 && _args2[1] !== undefined ? _args2[1] : 100;
-	          globalCounterToAdd = 0;
 	          globalCounterRef = doc(db, 'global', 'score');
-	          _context2.next = 5;
+	          _context2.next = 4;
 	          return getDoc(globalCounterRef);
-	        case 5:
+	        case 4:
 	          docSnap = _context2.sent;
 	          if (!docSnap.exists()) {
-	            _context2.next = 14;
+	            _context2.next = 13;
 	            break;
 	          }
 	          console.log('Firestore read performed');
 	          targetValue = docSnap.data().litersFlushed + amount;
 	          incrementGlobalCounter(globalCounterElement, docSnap.data().litersFlushed, amount, duration);
 	          if (!(targetValue !== docSnap.data().litersFlushed)) {
-	            _context2.next = 14;
+	            _context2.next = 13;
 	            break;
 	          }
-	          _context2.next = 13;
+	          _context2.next = 12;
 	          return updateDoc(globalCounterRef, {
 	            litersFlushed: targetValue
 	          });
-	        case 13:
+	        case 12:
 	          console.log('Firestore write performed');
-	        case 14:
+	        case 13:
 	        case "end":
 	          return _context2.stop();
 	      }
@@ -66700,6 +66699,7 @@ void main() {
 	  if (globalTimer <= 0) {
 	    globalTimer = globalCounterInterval;
 	    updateGlobalCounter(globalCounterToAdd);
+	    globalCounterToAdd = 0;
 	  }
 
 	  // Update global counter label
@@ -66745,12 +66745,13 @@ void main() {
 	      var _endValue = count;
 	      interval = setInterval(function () {
 	        startValue++;
-	        counterElement.textContent = startValue;
+	        counterElement.innerHTML = "".concat(startValue, " <span style=\"color: #45811a;\">(+").concat(increment, ")</span>");
 	        if (startValue >= _endValue) {
 	          clearInterval(interval);
 	          if (updateFlushing) {
 	            isFlushingProxy.value = false;
 	          }
+	          counterElement.innerHTML = "".concat(_endValue);
 	        }
 	        gsapWithCSS.fromTo(counterElement, {
 	          y: 0
@@ -66770,12 +66771,13 @@ void main() {
 	  var endValue = count + increment;
 	  interval = setInterval(function () {
 	    count++;
-	    counterElement.textContent = count;
+	    counterElement.innerHTML = "".concat(count, " <span style=\"color: #45811a;\">(+").concat(increment, ")</span>");
 	    if (count >= endValue) {
 	      clearInterval(interval);
 	      if (updateFlushing) {
 	        isFlushingProxy.value = false;
 	      }
+	      counterElement.innerHTML = "".concat(endValue);
 	    }
 	    gsapWithCSS.fromTo(counterElement, {
 	      y: 0

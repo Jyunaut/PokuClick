@@ -236,7 +236,6 @@ async function playIntro() {
 
 let globalCounterIncrement;
 async function updateGlobalCounter(amount, duration = 100) {
-	globalCounterToAdd = 0;
 	const globalCounterRef = doc(db, 'global', 'score');
 	const docSnap = await getDoc(globalCounterRef);
 	if (docSnap.exists()) {
@@ -333,8 +332,9 @@ function updateGlobalTimer(deltaTime) {
 	if (globalTimer <= 0) {
 		globalTimer = globalCounterInterval;
 		updateGlobalCounter(globalCounterToAdd);
+		globalCounterToAdd = 0;
 	}
-	
+
 	// Update global counter label
 	const time = globalTimer.toFixed(0);
 	const label = `Liters Flushed (Global) <span style="color: #45811a;">Update in ${time}</span>`;
@@ -379,12 +379,13 @@ function incrementCounter(counterElement, count, increment, updateFlushing = fal
 			let endValue = count;
 			interval = setInterval(function () {
 				startValue++;
-				counterElement.textContent = startValue;
+				counterElement.innerHTML = `${startValue} <span style="color: #45811a;">(+${increment})</span>`;
 				if (startValue >= endValue) {
 					clearInterval(interval);
 					if (updateFlushing) {
 						isFlushingProxy.value = false;
 					}
+					counterElement.innerHTML = `${endValue}`;
 				}
 				gsap.fromTo(counterElement, {
 					y: 0
@@ -405,12 +406,13 @@ function incrementCounter(counterElement, count, increment, updateFlushing = fal
 	let endValue = count + increment;
 	interval = setInterval(function () {
 		count++;
-		counterElement.textContent = count;
+		counterElement.innerHTML = `${count} <span style="color: #45811a;">(+${increment})</span>`;
 		if (count >= endValue) {
 			clearInterval(interval);
 			if (updateFlushing) {
 				isFlushingProxy.value = false;
 			}
+			counterElement.innerHTML = `${endValue}`;
 		}
 		gsap.fromTo(counterElement, {
 			y: 0
