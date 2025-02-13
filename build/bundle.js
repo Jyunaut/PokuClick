@@ -66290,7 +66290,7 @@ void main() {
 	var atlas;
 	var atlasLoader;
 	var assetManager;
-	var baseUrl = '../assets/';
+	var baseUrl = '/PokuClick/assets/' ;
 	var skeletonFile = 'Sprout.json';
 	var atlasFile = skeletonFile.replace('-pro', '').replace('-ess', '').replace('.json', '.atlas');
 	var anim_idle = 'sitting';
