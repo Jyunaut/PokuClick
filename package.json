@@ -38,7 +38,7 @@
     "@rollup/plugin-node-resolve": "15.2.3",
     "@rollup/plugin-terser": "0.4.4",
     "dotenv-webpack": "^8.1.0",
-    "rollup": "4.9.6",
+    "rollup": "4.34.6",
     "serve": "14.2.1"
   }
 }
