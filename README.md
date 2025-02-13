@@ -1,5 +1,5 @@
 # Poku Click
-A super small clicker game where you count the liters of rainbow puke the little sprout spews.
+A super small clicker game where you flush the liters of rainbow puke the little sprout spews.
 
 ---
 
