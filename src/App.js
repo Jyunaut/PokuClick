@@ -377,9 +377,10 @@ function incrementCounter(counterElement, count, increment, updateFlushing = fal
 		if (count > parseInt(counterElement.textContent)) {
 			let startValue = parseInt(counterElement.textContent);
 			let endValue = count;
+			const difference = endValue - startValue;
 			interval = setInterval(function () {
 				startValue++;
-				counterElement.innerHTML = `${startValue} <span style="color: #45811a;">(+${increment})</span>`;
+				counterElement.innerHTML = `${startValue} <span style="color: #45811a;">(+${difference})</span>`;
 				if (startValue >= endValue) {
 					clearInterval(interval);
 					if (updateFlushing) {

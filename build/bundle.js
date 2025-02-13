@@ -66743,9 +66743,10 @@ void main() {
 	    if (count > parseInt(counterElement.textContent)) {
 	      var startValue = parseInt(counterElement.textContent);
 	      var _endValue = count;
+	      var difference = _endValue - startValue;
 	      interval = setInterval(function () {
 	        startValue++;
-	        counterElement.innerHTML = "".concat(startValue, " <span style=\"color: #45811a;\">(+").concat(increment, ")</span>");
+	        counterElement.innerHTML = "".concat(startValue, " <span style=\"color: #45811a;\">(+").concat(difference, ")</span>");
 	        if (startValue >= _endValue) {
 	          clearInterval(interval);
 	          if (updateFlushing) {
