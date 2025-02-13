@@ -7,12 +7,12 @@ import ClickCounter from './ClickCounter';
 // Render the React component
 ReactDOM.render(
     <div>
-        <VolumeSlider />
         <div id="counters">
             <ClickCounter id="global-counter" label="Liters Flushed (Global)" />
             <ClickCounter id="flushed-counter" label="Liters Flushed" />
             <ClickCounter id="total-counter" label="Clicks" />
         </div>
+        <VolumeSlider />
     </div>,
     document.getElementById('root')
 );

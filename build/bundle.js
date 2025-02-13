@@ -66877,7 +66877,7 @@ void main() {
 	}(React.Component);
 
 	// Render the React component
-	ReactDOM.render(/*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(VolumeSlider, null), /*#__PURE__*/React.createElement("div", {
+	ReactDOM.render(/*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
 	  id: "counters"
 	}, /*#__PURE__*/React.createElement(ClickCounter, {
 	  id: "global-counter",
@@ -66888,7 +66888,7 @@ void main() {
 	}), /*#__PURE__*/React.createElement(ClickCounter, {
 	  id: "total-counter",
 	  label: "Clicks"
-	}))), document.getElementById('root'));
+	})), /*#__PURE__*/React.createElement(VolumeSlider, null)), document.getElementById('root'));
 	var app = new App();
 	app.init();
 
