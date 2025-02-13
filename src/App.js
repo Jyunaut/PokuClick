@@ -11,10 +11,13 @@ import { gsap } from 'gsap';
 import { db } from './firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import AudioManager from './AudioManager';
+import SpeedLinesEffect from './SpeedLinesEffect';
+
+const STATUS = 'production';
 
 // Update the global counter from the firebase database
 const globalCounterInterval = 30;
-let globalTimer = 0;
+let globalTimer = 30;
 let globalCounterToAdd = 0;
 let globalCounterElement;
 
@@ -30,7 +33,7 @@ let clickTimestamps = [];
 
 // Flush Counters
 const flushInterval = 2;
-let flushTimer = 0;
+let flushTimer = 2;
 let amountToFlush = 0;
 let flushCounter = parseInt(localStorage.getItem('flushCounter')) || 0;
 let flushCounterElement;
@@ -45,8 +48,9 @@ let skeletonMesh;
 let atlas;
 let atlasLoader;
 let assetManager;
-// const baseUrl = '../assets/sprout/';
-const baseUrl = '/PokuClick/assets/sprout/';
+const baseUrl = STATUS === 'production'
+	? '/PokuClick/assets/'
+	: '../assets/';
 const skeletonFile = 'Sprout.json';
 let atlasFile = skeletonFile
 	.replace('-pro', '')
@@ -61,6 +65,9 @@ let anim_pressed_rainbow = 'sitting_press_rainbow';
 
 // Audio variables
 let audioManager;
+
+// Speed lines effect
+let speedLinesEffect = new SpeedLinesEffect(20, 400, 900, 1);
 
 class App {
 	init() {
@@ -82,7 +89,7 @@ class App {
 		window.addEventListener('resize', onWindowResize, false);
 
 		// Load the assets required to display the sprout
-		assetManager = new spine.AssetManager(baseUrl);
+		assetManager = new spine.AssetManager(baseUrl + "sprout/");
 		assetManager.loadText(skeletonFile);
 		assetManager.loadTextureAtlas(atlasFile);
 
@@ -111,7 +118,7 @@ class App {
 
 		// Setup the audio manager
 		audioManager = new AudioManager();
-		audioManager.loadAudio("/PokuClick/assets/Oof_04.wav");
+		audioManager.loadAudio(baseUrl + "Oof_04.wav");
 		audioManager.setVolume(localStorage.getItem('volume') / 100 || 0.5);
 		const volumeSliderElement = document.getElementById('volume-slider');
 		volumeSliderElement.value = localStorage.getItem('volume') || 50;
@@ -167,6 +174,9 @@ function render() {
 
 	// Update the water level
 	updateWaterLevel(delta);
+
+	// Update the speed lines effect
+	updateInitialDState(delta);
 
 	// Render the scene
 	renderer.render(scene, camera);
@@ -225,9 +235,13 @@ async function updateGlobalCounter(amount, duration = 100) {
 	const globalCounterRef = doc(db, 'global', 'score');
 	const docSnap = await getDoc(globalCounterRef);
 	if (docSnap.exists()) {
+		console.log('Firestore read performed');
 		const targetValue = docSnap.data().litersFlushed + amount;
 		incrementGlobalCounter(globalCounterElement, docSnap.data().litersFlushed, amount, duration);
-		await updateDoc(globalCounterRef, { litersFlushed: targetValue });
+		if (targetValue !== docSnap.data().litersFlushed) {
+			await updateDoc(globalCounterRef, { litersFlushed: targetValue });
+			console.log('Firestore write performed');
+		}
 	}
 }
 
@@ -267,7 +281,7 @@ function playPressedAnimation() {
 }
 
 const isFlushingHandler = {
-	set: function(target, property, value) {
+	set: function (target, property, value) {
 		if (property === 'value') {
 			if (target[property] === false && value === true) {
 				skeletonMesh.state.setAnimation(0, anim_sitting_mouth_open, true).mixDuration = 0.25;
@@ -304,8 +318,8 @@ function updateCPFCounter() {
 	for (let i = 0; i < clickTimestamps.length; i++) {
 		sum += clickTimestamps[i];
 	}
-	cpfCounter = sum / clickTimestamps.length;
-	cpfCounterElement.textContent = (flushInterval * cpfCounter).toFixed(0);
+	cpfCounter = flushInterval * sum / clickTimestamps.length;
+	cpfCounterElement.textContent = cpfCounter.toFixed(0);
 	cpfLastCount = totalCounter;
 }
 
@@ -404,6 +418,24 @@ function updateWaterLevel(deltaTime) {
 	const waterElement = document.querySelector('.water');
 	const value = lerp(waterElement.style.height.replace('%', ''), amountToFlush * 2, deltaTime * 0.8);
 	waterElement.style.height = `${value}%`;
+}
+
+const initialDStateInterval = 0.03;
+let initialDStateTimer = initialDStateInterval;
+function updateInitialDState(deltaTime) {
+	if (initialDStateTimer > 0) {
+		initialDStateTimer -= deltaTime;
+	} else {
+		initialDStateTimer = initialDStateInterval;
+		if (cpfCounter > 10) {
+			speedLinesEffect.enableSpeedLines();
+			speedLinesEffect.shiftPositions(30);
+			console.log('Speed lines enabled');
+		} else {
+			speedLinesEffect.disableSpeedLines();
+			console.log('Speed lines disabled');
+		}
+	}
 }
 
 function lerp(start, end, t) {

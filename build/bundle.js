@@ -472,6 +472,10 @@
 	var reactDomExports = requireReactDom();
 	var ReactDOM = /*@__PURE__*/getDefaultExportFromCjs(reactDomExports);
 
+	function _assertClassBrand(e, t, n) {
+	  if ("function" == typeof e ? e === t : e.has(t)) return arguments.length < 3 ? t : n;
+	  throw new TypeError("Private element is not present on this object");
+	}
 	function _assertThisInitialized$1(e) {
 	  if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
 	  return e;
@@ -504,8 +508,14 @@
 	function _callSuper(t, o, e) {
 	  return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e));
 	}
+	function _checkPrivateRedeclaration(e, t) {
+	  if (t.has(e)) throw new TypeError("Cannot initialize the same private elements twice on an object");
+	}
 	function _classCallCheck(a, n) {
 	  if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
+	}
+	function _classPrivateMethodInitSpec(e, a) {
+	  _checkPrivateRedeclaration(e, a), a.add(e);
 	}
 	function _defineProperties(e, r) {
 	  for (var t = 0; t < r.length; t++) {
@@ -66153,9 +66163,103 @@ void main() {
 	  }]);
 	}();
 
+	var _SpeedLinesEffect_brand = /*#__PURE__*/new WeakSet();
+	var SpeedLinesEffect = /*#__PURE__*/function () {
+	  function SpeedLinesEffect(amount) {
+	    var minLength = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 300;
+	    var maxLength = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 900;
+	    var opacity = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1;
+	    _classCallCheck(this, SpeedLinesEffect);
+	    _classPrivateMethodInitSpec(this, _SpeedLinesEffect_brand);
+	    this.speedLines = [];
+	    this.minLength = minLength;
+	    this.maxLength = maxLength;
+	    this.opacity = opacity;
+	    this.enabled = false;
+	    for (var i = 0; i < amount; i++) {
+	      this.speedLines.push(_assertClassBrand(_SpeedLinesEffect_brand, this, _createSpeedLine).call(this));
+	    }
+	    this.speedLines.forEach(function (speedLine) {
+	      speedLine.style.display = 'none';
+	    });
+	  }
+	  return _createClass(SpeedLinesEffect, [{
+	    key: "enableSpeedLines",
+	    value: function enableSpeedLines() {
+	      if (this.enabled) {
+	        return;
+	      }
+	      this.speedLines.forEach(function (speedLine) {
+	        speedLine.style.display = 'block';
+	      });
+	      this.enabled = true;
+	    }
+	  }, {
+	    key: "disableSpeedLines",
+	    value: function disableSpeedLines() {
+	      if (!this.enabled) {
+	        return;
+	      }
+	      this.speedLines.forEach(function (speedLine) {
+	        speedLine.style.display = 'none';
+	      });
+	      this.enabled = false;
+	    }
+	  }, {
+	    key: "setSpeedLineOpacity",
+	    value: function setSpeedLineOpacity(opacity) {
+	      this.speedLines.forEach(function (speedLine) {
+	        speedLine.style.opacity = opacity;
+	      });
+	    }
+	  }, {
+	    key: "randomizePositions",
+	    value: function randomizePositions() {
+	      var _this = this;
+	      this.speedLines.forEach(function (speedLine) {
+	        _assertClassBrand(_SpeedLinesEffect_brand, _this, _setPosition).call(_this, speedLine, Math.random() * 360);
+	      });
+	    }
+	  }, {
+	    key: "shiftPositions",
+	    value: function shiftPositions(angleDelta) {
+	      var _this2 = this;
+	      this.speedLines.forEach(function (speedLine) {
+	        var currentAngle = parseFloat(speedLine.dataset.angle);
+	        _assertClassBrand(_SpeedLinesEffect_brand, _this2, _setPosition).call(_this2, speedLine, currentAngle + angleDelta);
+	      });
+	    }
+	  }]);
+	}();
+	function _createSpeedLine() {
+	  var triangle = document.createElement('div');
+	  triangle.style.position = 'absolute';
+	  triangle.style.borderLeft = '10px solid transparent';
+	  triangle.style.borderRight = '10px solid transparent';
+	  triangle.style.borderBottom = '10px solid white';
+	  triangle.style.maskImage = 'linear-gradient(to top, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0))';
+	  triangle.style.borderBottomWidth = "".concat(Math.random() * (this.maxLength - this.minLength) + this.minLength, "px");
+	  triangle.style.opacity = this.opacity;
+	  triangle.style.zIndex = 1000;
+	  _assertClassBrand(_SpeedLinesEffect_brand, this, _setPosition).call(this, triangle, Math.random() * 360);
+	  document.body.appendChild(triangle);
+	  return triangle;
+	}
+	function _setPosition(triangle, angle) {
+	  var radius = Math.max(window.innerWidth, window.innerHeight) / 2 + 100;
+	  var centerX = window.innerWidth / 2;
+	  var centerY = window.innerHeight / 2;
+	  var x = centerX + radius * Math.cos(angle * Math.PI / 180);
+	  var y = centerY + radius * Math.sin(angle * Math.PI / 180);
+	  triangle.style.left = "".concat(x, "px");
+	  triangle.style.top = "".concat(y, "px");
+	  triangle.style.transform = "rotate(".concat(angle - 90, "deg)");
+	  triangle.dataset.angle = angle;
+	}
+
 	// Update the global counter from the firebase database
 	var globalCounterInterval = 30;
-	var globalTimer = 0;
+	var globalTimer = 30;
 	var globalCounterToAdd = 0;
 	var globalCounterElement;
 
@@ -66171,7 +66275,7 @@ void main() {
 
 	// Flush Counters
 	var flushInterval = 2;
-	var flushTimer = 0;
+	var flushTimer = 2;
 	var amountToFlush = 0;
 	var flushCounter = parseInt(localStorage.getItem('flushCounter')) || 0;
 	var flushCounterElement;
@@ -66186,8 +66290,7 @@ void main() {
 	var atlas;
 	var atlasLoader;
 	var assetManager;
-	// const baseUrl = '../assets/sprout/';
-	var baseUrl = '/PokuClick/assets/sprout/';
+	var baseUrl = '../assets/';
 	var skeletonFile = 'Sprout.json';
 	var atlasFile = skeletonFile.replace('-pro', '').replace('-ess', '').replace('.json', '.atlas');
 	var anim_idle = 'sitting';
@@ -66199,6 +66302,9 @@ void main() {
 
 	// Audio variables
 	var audioManager;
+
+	// Speed lines effect
+	var speedLinesEffect = new SpeedLinesEffect(20, 400, 900, 1);
 	var App = /*#__PURE__*/function () {
 	  function App() {
 	    _classCallCheck(this, App);
@@ -66223,7 +66329,7 @@ void main() {
 	      window.addEventListener('resize', onWindowResize, false);
 
 	      // Load the assets required to display the sprout
-	      assetManager = new AssetManager(baseUrl);
+	      assetManager = new AssetManager(baseUrl + "sprout/");
 	      assetManager.loadText(skeletonFile);
 	      assetManager.loadTextureAtlas(atlasFile);
 	      requestAnimationFrame(load);
@@ -66251,7 +66357,7 @@ void main() {
 
 	      // Setup the audio manager
 	      audioManager = new AudioManager();
-	      audioManager.loadAudio("/PokuClick/assets/Oof_04.wav");
+	      audioManager.loadAudio(baseUrl + "Oof_04.wav");
 	      audioManager.setVolume(localStorage.getItem('volume') / 100 || 0.5);
 	      var volumeSliderElement = document.getElementById('volume-slider');
 	      volumeSliderElement.value = localStorage.getItem('volume') || 50;
@@ -66304,6 +66410,9 @@ void main() {
 
 	  // Update the water level
 	  updateWaterLevel(delta);
+
+	  // Update the speed lines effect
+	  updateInitialDState(delta);
 
 	  // Render the scene
 	  renderer.render(scene, camera);
@@ -66392,16 +66501,23 @@ void main() {
 	        case 5:
 	          docSnap = _context2.sent;
 	          if (!docSnap.exists()) {
-	            _context2.next = 11;
+	            _context2.next = 14;
 	            break;
 	          }
+	          console.log('Firestore read performed');
 	          targetValue = docSnap.data().litersFlushed + amount;
 	          incrementGlobalCounter(globalCounterElement, docSnap.data().litersFlushed, amount, duration);
-	          _context2.next = 11;
+	          if (!(targetValue !== docSnap.data().litersFlushed)) {
+	            _context2.next = 14;
+	            break;
+	          }
+	          _context2.next = 13;
 	          return updateDoc(globalCounterRef, {
 	            litersFlushed: targetValue
 	          });
-	        case 11:
+	        case 13:
+	          console.log('Firestore write performed');
+	        case 14:
 	        case "end":
 	          return _context2.stop();
 	      }
@@ -66479,8 +66595,8 @@ void main() {
 	  for (var i = 0; i < clickTimestamps.length; i++) {
 	    sum += clickTimestamps[i];
 	  }
-	  cpfCounter = sum / clickTimestamps.length;
-	  cpfCounterElement.textContent = (flushInterval * cpfCounter).toFixed(0);
+	  cpfCounter = flushInterval * sum / clickTimestamps.length;
+	  cpfCounterElement.textContent = cpfCounter.toFixed(0);
 	  cpfLastCount = totalCounter;
 	}
 	function updateGlobalTimer(deltaTime) {
@@ -66575,6 +66691,23 @@ void main() {
 	  var waterElement = document.querySelector('.water');
 	  var value = lerp(waterElement.style.height.replace('%', ''), amountToFlush * 2, deltaTime * 0.8);
 	  waterElement.style.height = "".concat(value, "%");
+	}
+	var initialDStateInterval = 0.03;
+	var initialDStateTimer = initialDStateInterval;
+	function updateInitialDState(deltaTime) {
+	  if (initialDStateTimer > 0) {
+	    initialDStateTimer -= deltaTime;
+	  } else {
+	    initialDStateTimer = initialDStateInterval;
+	    if (cpfCounter > 10) {
+	      speedLinesEffect.enableSpeedLines();
+	      speedLinesEffect.shiftPositions(30);
+	      console.log('Speed lines enabled');
+	    } else {
+	      speedLinesEffect.disableSpeedLines();
+	      console.log('Speed lines disabled');
+	    }
+	  }
 	}
 	function lerp(start, end, t) {
 	  return start * (1 - t) + end * t;
